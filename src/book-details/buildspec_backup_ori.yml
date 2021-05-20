@@ -1,0 +1,21 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      docker: 19
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - pip3 install awscli --upgrade --user
+      - aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 424202621926.dkr.ecr.ap-northeast-2.amazonaws.com
+  build:
+    commands:
+      - echo Building the Docker image...
+      - docker build -t jk-ecr-repository/details-v1 --build-arg service_version=v1 .
+      - docker tag jk-ecr-repository/details-v1:latest 424202621926.dkr.ecr.ap-northeast-2.amazonaws.com/jk-ecr-repository/details-v1:latest
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push 424202621926.dkr.ecr.ap-northeast-2.amazonaws.com/jk-ecr-repository/details-v1:latest

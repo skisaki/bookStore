@@ -1,0 +1,44 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: productpage
+  namespace: jk-app
+spec:
+  awsName: productpage-virtual-node
+  podSelector:
+    matchLabels:
+      app: productpage
+  listeners:
+    - portMapping:
+        #port: 8088
+        port: 9080
+        protocol: http
+  serviceDiscovery:
+    dns:
+      hostname: productpage.jk-app.svc.cluster.local
+  backends:
+    - virtualService:
+        virtualServiceRef:
+          name: details
+    - virtualService:
+        virtualServiceRef:
+          name: reviews
+    - virtualService:
+        virtualServiceRef:
+          name: ratings
+  logging:
+    accessLog:
+      file:
+        path: "/dev/stdout"
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualService
+metadata:
+  name: productpage
+  namespace: jk-app
+spec:
+  awsName: productpage
+  provider:
+    virtualNode:
+      virtualNodeRef:
+        name: productpage

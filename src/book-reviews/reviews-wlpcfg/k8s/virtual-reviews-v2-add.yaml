@@ -1,0 +1,81 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: reviews-v2
+  namespace: jk-app
+spec:
+  awsName: reviews-virtual-node-v2
+  podSelector:
+    matchLabels:
+      app: reviews-v2
+  listeners:
+    - portMapping:
+        port: 9080
+        protocol: http
+  serviceDiscovery:
+    dns:
+      hostname: reviews-v2.jk-app.svc.cluster.local
+  backends:
+    - virtualService:
+        virtualServiceRef:
+          name: ratings
+  logging:
+    accessLog:
+      file:
+        path: "/dev/stdout"
+---
+# create ---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualRouter
+metadata:
+  namespace: jk-app
+  name: reviews
+spec:
+  awsName: reviews-virtual-router
+  listeners:
+    - portMapping:
+        port: 9080
+        protocol: http
+  routes:
+    #### header based routing
+    - name: route-to-reviews-header
+      priority: 10
+      httpRoute:
+        match:
+          prefix: /
+          headers:
+            - name: end-user
+              match:
+                exact: gsn
+        action:
+          weightedTargets:
+            - virtualNodeRef:
+                name: reviews-v2
+              weight: 1
+    #### path based routing
+    - name: route-to-reviews
+      priority: 20
+      httpRoute:
+        match:
+          prefix: /
+        action:
+          weightedTargets:
+            - virtualNodeRef:
+                name: reviews
+              weight: 1
+            - virtualNodeRef:
+                name: reviews-v2
+              weight: 1
+---
+# review v1 -> v2 update ---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualService
+metadata:
+  name: reviews
+  namespace: jk-app
+spec:
+  awsName: reviews
+  provider:
+    virtualRouter:
+        virtualRouterRef:
+            name: reviews

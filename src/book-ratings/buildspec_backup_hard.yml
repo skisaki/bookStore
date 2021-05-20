@@ -1,0 +1,43 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      docker: 19
+    commands:
+      - curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.16.12/2020-07-08/bin/linux/amd64/kubectl
+      - chmod +x ./kubectl
+      - mv ./kubectl /usr/local/bin/kubectl
+      - mkdir ~/.kube
+      - aws eks --region ap-northeast-2 update-kubeconfig --name jk-cluster
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      # - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+      - $(aws ecr get-login --no-include-email --region ap-northeast-2)
+  build:
+    commands:
+      - echo Build Starting on `date`
+      # - echo Building with gradle...
+      # - chmod +x ./gradlew
+      # - ./gradlew build
+      - echo Building the Docker image...
+      # - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
+      # - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+      # - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+      - docker build -t jk-ecr-repository/ratings-v1 --build-arg service_version=v1 .
+      - docker tag jk-ecr-repository/ratings-v1:latest 424202621926.dkr.ecr.ap-northeast-2.amazonaws.com/jk-ecr-repository/ratings-v1:latest
+      - docker push 424202621926.dkr.ecr.ap-northeast-2.amazonaws.com/jk-ecr-repository/ratings-v1:latest
+  post_build:
+    commands:
+      - AWS_ECR_URI=424202621926.dkr.ecr.ap-northeast-2.amazonaws.com/jk-ecr-repository/ratings-v1:latest
+      - DATE=`date`
+      - echo Build completed on $DATE
+      # - sed -i.bak 's#AWS_ECR_URI#'"$AWS_ECR_URI"'#' ./k8s/deployment.yaml
+      # - sed -i.bak 's#DATE_STRING#'"$DATE"'#' ./k8s/deployment.yaml
+      # - kubectl apply -f ./k8s/deployment.yaml
+      # - kubectl apply -f ./k8s/service.yaml
+      # - sed -i.bak ./k8s/deploy-ratings.yaml
+      # - sed -i.bak ./k8s/virtual-ratings-add.yaml
+      - kubectl apply -f ./k8s/deploy-ratings.yaml
+      - kubectl apply -f ./k8s/virtual-ratings-add.yaml

@@ -1,0 +1,49 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      docker: 19
+    commands:
+      - curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.16.12/2020-07-08/bin/linux/amd64/kubectl
+      - chmod +x ./kubectl
+      - mv ./kubectl /usr/local/bin/kubectl
+      - mkdir ~/.kube
+      - aws eks --region ap-northeast-2 update-kubeconfig --name jk-cluster
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+  build:
+    commands:
+      - echo Build Starting on `date`
+      - echo Building the Docker image...
+      - export DOCKER_TAG=$(date '+%Y-%m-%d-%s')
+      - echo $DOCKER_TAG
+      ### V1
+      # - docker build -t $IMAGE_REPO_NAME_V1:$DOCKER_TAG --build-arg service_version=v2 --build-arg enable_ratings=true ./reviews-wlpcfg/
+      # - docker tag $IMAGE_REPO_NAME_V1:$DOCKER_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME_V1:$DOCKER_TAG
+      # - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME_V1:$DOCKER_TAG
+      
+      ### V2
+      - docker build -t $IMAGE_REPO_NAME_V2:$DOCKER_TAG --build-arg service_version=v3 --build-arg enable_ratings=true --build-arg star_color=red ./reviews-wlpcfg/
+      - docker tag $IMAGE_REPO_NAME_V2:$DOCKER_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME_V2:$DOCKER_TAG
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME_V2:$DOCKER_TAG
+  post_build:
+    commands:
+      - echo apply .yaml file
+      ### V1
+      # - AWS_ECR_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME_V1:$DOCKER_TAG
+      # - sed -i.bak 's#AWS_ECR_URI#'"$AWS_ECR_URI"'#' ./reviews-wlpcfg/k8s/deploy-reviews.yaml
+      
+      # - kubectl delete -f ./reviews-wlpcfg/k8s/virtual-reviews-v2-add.yaml
+      # - kubectl delete -f ./reviews-wlpcfg/k8s/deploy-reviews-v2.yaml
+      
+      # - kubectl apply -f ./reviews-wlpcfg/k8s/deploy-reviews.yaml
+      # - kubectl apply -f ./reviews-wlpcfg/k8s/virtual-reviews-add.yaml
+      
+      ### V2
+      - AWS_ECR_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME_V2:$DOCKER_TAG
+      - sed -i.bak 's#AWS_ECR_URI#'"$AWS_ECR_URI"'#' ./reviews-wlpcfg//k8s/deploy-reviews-v2.yaml
+      - kubectl apply -f ./reviews-wlpcfg/k8s/deploy-reviews-v2.yaml
+      - kubectl apply -f ./reviews-wlpcfg/k8s/virtual-reviews-v2-add.yaml

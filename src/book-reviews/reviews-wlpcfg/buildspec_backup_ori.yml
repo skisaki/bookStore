@@ -1,0 +1,30 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      docker: 19
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - pip3 install awscli --upgrade --user
+      - aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 424202621926.dkr.ecr.ap-northeast-2.amazonaws.com
+      # - docker run --rm -u root -v "$(pwd)":/home/gradle/project -w /home/gradle/project gradle:4.8.1 gradle clean build
+  build:
+    commands:
+      - echo Building the Docker image...
+      
+      # - docker build -t jk-ecr-repository/reviews-v1 --build-arg service_version=v2 \
+      # - --build-arg enable_ratings=true .
+      # - docker tag jk-ecr-repository/reviews-v1:latest 424202621926.dkr.ecr.ap-northeast-2.amazonaws.com/jk-ecr-repository/reviews-v1:latest
+      
+      - docker build -t jk-ecr-repository/reviews-v2 --build-arg service_version=v3 --build-arg enable_ratings=true --build-arg star_color=red ./reviews-wlpcfg/
+      - docker tag jk-ecr-repository/reviews-v2:latest 424202621926.dkr.ecr.ap-northeast-2.amazonaws.com/jk-ecr-repository/reviews-v2:latest
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      
+      # - docker push 424202621926.dkr.ecr.ap-northeast-2.amazonaws.com/jk-ecr-repository/reviews-v1:latest
+      
+      - docker push 424202621926.dkr.ecr.ap-northeast-2.amazonaws.com/jk-ecr-repository/reviews-v2:latest

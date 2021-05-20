@@ -1,0 +1,57 @@
+##################################################################################################
+# Details service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: details
+  namespace: jk-app
+  labels:
+    app: details
+    service: details
+spec:
+  ports:
+  - port: 9080
+    name: http
+  selector:
+    app: details
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bookinfo-details
+  namespace: jk-app
+  labels:
+    account: details
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: details
+  namespace: jk-app
+  labels:
+    app: details
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: details
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: details
+        version: v1
+    spec:
+      serviceAccountName: bookinfo-details
+      containers:
+      - name: details
+        # image: 424202621926.dkr.ecr.ap-northeast-2.amazonaws.com/jk-ecr-repository/details-v1:latest
+        image: AWS_ECR_URI
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 9080
+        securityContext:
+          runAsUser: 1000
+---

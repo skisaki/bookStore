@@ -1,0 +1,220 @@
+{% extends "bootstrap/base.html" %}
+{% block metas %}
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% endblock %}
+
+{% block styles %}
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="static/bootstrap/css/bootstrap.min.css">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="static/bootstrap/css/bootstrap-theme.min.css">
+{% endblock %}
+{% block scripts %}
+<!-- Latest compiled and minified JavaScript -->
+<script src="static/jquery.min.js"></script>
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="static/bootstrap/js/bootstrap.min.js"></script>
+
+<script type="text/javascript">
+  $('#login-modal').on('shown.bs.modal', function () {
+    $('#username').focus();
+  });
+</script>
+{% endblock %}
+{% block title %}Simple Bookstore App{% endblock %}
+{% block content %}
+
+<nav class="navbar navbar-inverse navbar-static-top">
+  <div class="container">
+    <div class="navbar-header">
+      <!-- <a class="navbar-brand" href="book.skisaki.shop"> -->
+        <img src="https://www.wisen.co.kr/_core/_files/news/news_6052d2849fba1.jpg" style="max-width: 30%; height: 100#;" alt="GSN">
+        <span style="padding-left: 5px;color: #FFFFFF;">Book Store</span>
+    </div>
+    {% if user: %}
+    <p class="navbar-text navbar-right" style="margin-top: 2%">
+      <i class="glyphicon glyphicon-user" aria-hidden="true"></i>
+      <span style="padding-left: 5px;">{{ user }} ( <a href="logout">로그아웃</a> )</span>
+    </p>
+    {% else %}
+    <button type="button" class="btn btn-default navbar-btn navbar-right" data-toggle="modal" href="#login-modal" style="margin-top: 1.5%;">로그인</button>
+    {% endif %}
+  </div>
+</nav>
+
+<div id="login-modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">로그인</h4>
+      </div>
+      <div class="modal-body">
+        <form method="post" action='login' name="login_form">
+          <p><input type="text" class="form-control" name="username" id="username" placeholder="아이디를 입력하세요."></p>
+          <p><input type="password" class="form-control" name="passwd" placeholder="비밀번호를 입력하세요."></p>
+          <p>
+            <button type="submit" class="btn btn-primary">로그인</button>
+            <button type="button" class="btn btn-default" data-dismiss="modal">취소</button>
+          </p>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <h3 class="text-center text-primary">{{ product.title }}</h3>
+      {% autoescape false %}
+      <p>구매: {{ product.descriptionHtml }}</p>
+      {% endautoescape %}
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      {% if detailsStatus == 200: %}
+      <h4 class="text-left text-primary">도서 정보</h4>
+      <dl class="col-md-6">
+       <img src="http://image.yes24.com/Goods/39011465/L" alt="아마존 웹 서비스 인 액션 (Amazon Web Service In Action)">
+      </dl>
+      <dl class="col-md-6">
+        <!--<dt>Type:</dt>{{ details.type }}-->
+        <!--<dt>Pages:</dt>{{ details.pages }}-->
+        <!--<dt>Publisher:</dt>{{ details.publisher }}-->
+        <!--<dt>Language:</dt>{{ details.language }}-->
+        <!--<dt>ISBN-10:</dt>{{ details['ISBN-10'] }}-->
+        <!--<dt>ISBN-13:</dt>{{ details['ISBN-13'] }}-->
+        
+        <!-- 디테일 -->
+        <dt>가격 :</dt>       {{ details.price }}
+        <dt>배송비 :</dt>     {{ details.shipping_fee }}
+        <dt>지은이 :</dt>     {{ details.auth }}
+        <dt>출판사 :</dt>     {{ details.publisher }}
+        <dt>출간일 :</dt>     {{ details.Publication_date }}
+        <dt>페이지:</dt>      {{ details.pages }}
+        <dt>ISBN-10 :</dt>    {{ details['ISBN-10'] }}
+        <dt>ISBN-13 :</dt>    {{ details['ISBN-13'] }}
+        <dt>관련분류 :</dt>   {{ details.publisher }}
+        <dt>저자 소개 :</dt>  {{ details.contents }}
+      </dl>
+      {% else %}
+      <h4 class="text-center text-primary">Error fetching product details!</h4>
+      {% if details: %}
+      <p>{{ details.error }}</p>
+      {% endif %}
+      {% endif %}
+    </div>
+    
+    <!-- 배송 /반품 / 교환 정보 -->
+    <div class="col-md-6">
+
+       <h4 class="text-left text-primary">배송 / 반품 / 교환</h4>
+            <h5 class="ts_infoSet pat15">배송 안내</h5>
+            <table class="tb_nor gd_tb" width="100%">
+                <caption>반품/교환 안내에 대한 내용입니다.</caption>
+                <colgroup>
+                    <col width="100">
+                    <col width="*">
+                </colgroup>
+                <tbody>
+                    <tr>
+                        <th class="txt al col_w100" scope="row" valign="top">배송 구분</th>
+                        <td class="txt">GSN 배송</td>
+                    </tr>
+                        <tr>
+                            <th class="txt al col_w100" scope="row" valign="top">포장 안내</th>
+                            <td class="txt">
+                                <p class="txC_black fwB">안전하고 정확한 포장을 위해 CCTV를 설치하여 운영하고 있습니다.</p>
+                                <p class="mgt5">고객님께 배송되는 모든 상품을 CCTV로 녹화하고 있으며, 철저한 모니터링을 통해 작업 과정에 문제가 없도록 최선을 다 하겠습니다.</p>
+                                <ul>
+                                    <li class="text-center">
+                                      <img src="http://image.yes24.com/sysimage/mV2/detail/thumb_deli01.jpg" border="0" alt="포장안내1">
+                                      <img src="http://image.yes24.com/sysimage/mV2/detail/thumb_deli02.jpg" border="0" alt="포장안내2">
+                                      <img src="http://image.yes24.com/sysimage/mV2/detail/thumb_deli04.jpg" border="0" alt="포장안내4">
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                </tbody>
+            </table>
+        <h5 class="ts_infoSet pat15">반품/교환 안내</h5>
+        <table class="tb_nor gd_tb" width="100%">
+            <caption>반품/교환 안내에 대한 내용입니다.</caption>
+            <colgroup>
+                <col width="100">
+                <col width="*">
+            </colgroup>
+            <tbody>
+                <tr>
+                    <th class="txt al col_w100" scope="row" valign="top">반품/교환 방법</th>
+                    <td class="txt">
+                        <ul class="alertLi">
+                            <li class="txC_nor"><em class="bl_rnd">&nbsp;</em>고객만족센터(010-4051-1802)</li>
+                            <li class="txC_nor"><em class="bl_rnd">&nbsp;</em>판매자 배송 상품은 판매자와 반품/교환이 협의된 상품에 한해 가능합니다.</li>
+                        </ul>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!--리뷰 한줄평 -->
+    <div class="col-md-12">
+      {% if reviewsStatus == 200: %}
+      <h4 class="text-left text-primary">리뷰 / 한줄평</h4>
+      {% for review in reviews.reviews %}
+      <blockquote>
+        <!-- 별점 -->
+        {% if review.rating: %}
+        {% if review.rating.stars: %}
+        <font color="{{ review.rating.color }}">
+          <!-- red -->
+          {% if review.rating.color == 'red' %}
+            <!-- full stars: -->
+            {% for n in range(review.rating.stars) %}
+            <span class="glyphicon glyphicon-star"></span>
+            {% endfor %}
+            <!-- empty stars: -->
+            {% for n in range(5 - review.rating.stars) %}
+            <span class="glyphicon glyphicon-star-empty"></span>
+            {% endfor %}
+            
+          <!-- not red -->
+          {% else %}
+            {% for n in range(review.rating.stars) %}
+              <span class="glyphicon glyphicon-heart"></span>
+            {% endfor %}
+          {% endif %}
+          
+        </font>
+        {% elif review.rating.error: %}
+        <p><i>{{ review.rating.error }}</i></p>
+        {% endif %}
+        {% endif %}
+        
+        <!-- 리뷰 -->
+        <!--<a href="http://m.blog.yes24.com/document/10516963" style="color: {{ review.rating.color }}">-->
+        <a href="{{ review.url }}" style="color: {{ review.rating.color }}">
+          <p>{{ review.text }}</p>
+        </a>
+        <small>{{ review.reviewer }}</small>
+      </blockquote>
+      {% endfor %}
+      {% else %}
+      <h4 class="text-center text-primary">Error fetching product reviews!</h4>
+      {% if reviews: %}
+      <p>{{ reviews.error }}</p>
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

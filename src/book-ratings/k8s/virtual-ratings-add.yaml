@@ -1,0 +1,33 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: ratings
+  namespace: jk-app
+spec:
+  awsName: ratings-virtual-node
+  podSelector:
+    matchLabels:
+      app: ratings
+  listeners:
+    - portMapping:
+        port: 9080
+        protocol: http
+  serviceDiscovery:
+    dns:
+      hostname: ratings.jk-app.svc.cluster.local
+  logging:
+    accessLog:
+      file:
+        path: "/dev/stdout"
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualService
+metadata:
+  name: ratings
+  namespace: jk-app
+spec:
+  awsName: ratings
+  provider:
+    virtualNode:
+      virtualNodeRef:
+        name: ratings

@@ -1,0 +1,33 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: details
+  namespace: jk-app
+spec:
+  awsName: details-virtual-node
+  podSelector:
+    matchLabels:
+      app: details
+  listeners:
+    - portMapping:
+        port: 9080
+        protocol: http
+  serviceDiscovery:
+    dns:
+      hostname: details.jk-app.svc.cluster.local
+  logging:
+    accessLog:
+      file:
+        path: "/dev/stdout"
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualService
+metadata:
+  name: details
+  namespace: jk-app
+spec:
+  awsName: details
+  provider:
+    virtualNode:
+      virtualNodeRef:
+        name: details

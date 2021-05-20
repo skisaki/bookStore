@@ -1,0 +1,79 @@
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualGateway
+metadata:
+  name: ingress-gw
+  namespace: jk-app
+spec:
+  namespaceSelector:
+    matchLabels:
+      gateway: ingress-gw
+  podSelector:
+    matchLabels:
+      app: ingress-gw
+  listeners:
+    - portMapping:
+        port: 9080
+        protocol: http
+  logging:
+    accessLog:
+      file:
+        path: "/dev/stdout"
+
+---
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: GatewayRoute
+metadata:
+  name: gateway-route
+  namespace: jk-app
+spec:
+  httpRoute:
+    match:
+      prefix: "/"
+    action:
+      target:
+        virtualService:
+          virtualServiceRef:
+            name: productpage
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-gw
+  namespace: jk-app
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "alb"
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 9080
+      name: http
+  selector:
+    app: ingress-gw
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingress-gw
+  namespace: jk-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ingress-gw
+  template:
+    metadata:
+      labels:
+        app: ingress-gw
+    spec:
+      containers:
+        - name: envoy
+          #image: 840364872350.dkr.ecr.ap-southeast-1.amazonaws.com/aws-appmesh-envoy:v1.15.0.0-prod
+          image: public.ecr.aws/appmesh/aws-appmesh-envoy:v1.17.2.0-prod
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9080
+---
